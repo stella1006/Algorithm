@@ -14,8 +14,7 @@ template <typename T>
 struct Node {
 	T entry;
 	Node *next;
-	Node():next(NULL) {};
-	Node(T item, Node<T> *add_on = NULL):entry(item), next(add_on){};
+	
 };
 
 
