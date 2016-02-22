@@ -5,16 +5,16 @@ private:
   int count;
   
 public:
-  UF(int N) {
-		// Initialize component id array.
-		count = N;
-		id = new int[N];
-		for (int i = 0; i < N; i++)
-			id[i] = i;
-	}
+	UF(int N) {
+	 // Initialize component id array.
+	 count = N;
+	 id = new int[N];
+	 for (int i = 0; i < N; i++)
+		id[i] = i;
+ 	 }
 	
 	int count() { 
-	  return count; 
+	 return count; 
 	}
 	
 	boolean connected(int p, int q) { 
@@ -28,9 +28,9 @@ public:
 		  p = id[p];
 	  }
 	  return p;
-  }
+  	}
   
-  void union(int p, int q) {
+        void union(int p, int q) {
 	  int i = find(p);
 	  int j = find(q);
 	  if (i == j) return;
@@ -43,6 +43,6 @@ public:
 	    sz[i] += sz[j]; 
 	  }
 	  count--;
-  }
+  	}
   
 };
