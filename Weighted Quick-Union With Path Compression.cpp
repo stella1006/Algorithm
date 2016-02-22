@@ -2,6 +2,7 @@
 class UF {
 private:
   int id[];
+  int sz[]
   int count;
   
 public:
@@ -9,8 +10,10 @@ public:
 	 // Initialize component id array.
 	 count = N;
 	 id = new int[N];
+	 sz = new int[N];
 	 for (int i = 0; i < N; i++)
-		id[i] = i;
+		id[i] = i;// 每个节点的组号就是该节点的序号
+		sz[i] = 1;// 初始情况下，每个组的大小都是1
  	 }
 	
 	int count() { 
