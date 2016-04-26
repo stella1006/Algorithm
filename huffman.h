@@ -51,6 +51,9 @@ public:
 	//initialize the object according to the iostream
 	huffman (string in_file_name, string out_file_name, string code_file);
 
+	//destructor
+	~huffman();
+
 	//construct priority_queue
 	void create_pq();
 
@@ -86,6 +89,12 @@ huffman::huffman(string in_file_name, string out_file_name, string code_file_nam
 		node_array[i] = new huffman_node();
 	}
 }
+
+huffman::~huffman() {
+	memset(node_array, NULL, sizeof(node_array)); //clear the node_array
+	root = NULL;
+}
+
 
 void huffman::create_node_array() {
 	in_file.open(in_file_name, ios_base::in);
@@ -171,100 +180,99 @@ void huffman::update_array(node_ptr & root) {
 		node_array[id - 'a']->code = root->code;
 	}
 }
-void huffman::save_to_file() {
-	if (root != NULL && root->left == NULL && root->right == NULL) {
-		char id = root->id;
-		node_array[id - 'a']->code = root->code;
-	}
-	in_file.open(in_file_name, ios_base::in);
-	out_file.open(out_file_name);
-	code_file.open(code_file_name, ios_base::out);
-	if (in_file.fail()) cout << "***Error:The file does not exist!" << endl; //if the in_file does not exist, output the error message
-	else { //read the contents in the input file into text
-		char temp;
-		while (!in_file.eof()) {
-			in_file >> temp;
-			if (in_file.fail()) break;
-			out_file << (node_array[temp - 'a']->code).c_str();
-		}
-		for (int i = 0; i < MAX_SIZE; i++) {
-			if (node_array[i]->code != "")
-				code_file << (char)('a' + i) << node_array[i]->code.c_str() << endl;;
-		}
-
-		in_file.close();
-		code_file.close();
-	}
-}
-
-//string intToBin(int x, int num) {
-//	string s = "";
-//	for(int i=num-1;i>-1;i--){
-//		bool k = x&(1<<i);
-//		s += k? '1': '0'; 
-//	}
-//	return s == "" ? "0": s;
-//}
-
 //void huffman::save_to_file() {
-//	if (root == NULL) return;
 //	if (root != NULL && root->left == NULL && root->right == NULL) {
 //		char id = root->id;
 //		node_array[id - 'a']->code = root->code;
 //	}
-//	unsigned char ch = 0;
-//	long long count = 0;
-//	bool an = false;
-//	in_file.open(in_file_name, ios_base::binary);
-//	out_file.open(out_file_name, ios_base::binary);
+//	in_file.open(in_file_name, ios_base::in);
+//	out_file.open(out_file_name);
 //	code_file.open(code_file_name, ios_base::out);
-//
-//	if (in_file.fail()) cout << "***Error:The file does not exist!" << endl;
+//	if (in_file.fail()) cout << "***Error:The file does not exist!" << endl; //if the in_file does not exist, output the error message
 //	else { //read the contents in the input file into text
 //		char temp;
-//		out_file << " ";
-//		out_file << " ";
 //		while (!in_file.eof()) {
 //			in_file >> temp;
 //			if (in_file.fail()) break;
-//			string s = node_array[temp - 'a']->code;
-//			cout << "s:" << s << endl;
-//			if (s != "") {
-//				for (int i = 0; i < s.length(); i++) {
-//					if (s[i] == '1') ch++;
-//					if (!an) ch <<= 1;
-//					count++;
-//					if (an) {
-//						count = 0;
-//						out_file << (char)(ch) ;
-//						cout << (int)(ch) << " " << intToBin((int)(ch), 8) << "k" << endl;
-//						ch = 0;
-//						an = false;
-//					}
-//					if (count == 7) an = true;
-//				}
-//			}
-//		}
-//
-//		out_file.seekp(0,ios::beg);
-//		if (count > 0) {
-//			out_file << (unsigned char)(count);
-//			out_file << (char)(ch>>1);
-//			cout << count << " r:" << (int)(char)(ch>>1) << endl;
-//		}
-//		else {
-//			out_file << '0';
-//			out_file << '0';
+//			out_file << (node_array[temp - 'a']->code).c_str();
 //		}
 //		for (int i = 0; i < MAX_SIZE; i++) {
 //			if (node_array[i]->code != "")
 //				code_file << (char)('a' + i) << node_array[i]->code.c_str() << endl;;
 //		}
+//
 //		in_file.close();
-//		out_file.close();
 //		code_file.close();
 //	}
 //}
+
+string intToBin(int x, int num) {
+	string s = "";
+	for(int i=num-1;i>-1;i--){
+		bool k = x&(1<<i);
+		s += k? '1': '0'; 
+	}
+	return s == "" ? "0": s;
+}
+
+void huffman::save_to_file() {
+	if (root == NULL) return; //if the root is null, no nothing
+	if (root != NULL && root->left == NULL && root->right == NULL) { //if there is only a root and no child, save it
+		char id = root->id;
+		node_array[id - 'a']->code = root->code;
+	}
+	unsigned char ch = 0;
+	long long count = 0; //count the bits that have been added to the codes
+	bool an = false;    //save if the binary bits have already 8 bits
+	in_file.open(in_file_name, ios_base::binary);     //open the input file that contains the original symbols
+	out_file.open(out_file_name, ios_base::binary);   //open the output file that will save the compressed char codes
+	code_file.open(code_file_name, ios_base::out);    //open the code file that contains the symbols and their corresponding codes
+
+	if (in_file.fail()) cout << "***Error:The file does not exist!" << endl;
+	else { //read the contents in the input file into text
+		char temp;
+		out_file << " ";    //set the first two position to be empty, they are specific symbols that indicates the information of last char, including how many bits the char indicates and what's the value of the char
+		out_file << " ";
+		while (!in_file.eof()) {
+			in_file >> temp;   //input a charthe original text 
+			if (in_file.fail()) break;
+			string s = node_array[temp - 'a']->code;   //fetch the codes corresponding to the text char
+			//cout << "s:" << s << endl;
+			if (s != "") {
+				for (int i = 0; i < s.length(); i++) { //save it using a char that can represent 8 binary bits
+					if (s[i] == '1') ch++;    //if the code is '1'
+					if (!an) ch <<= 1;        //shift bits left
+					count++;
+					if (an) {
+						count = 0;
+						out_file << (char)(ch) ; //if there are already 8 bits code, output the corresponding char.
+						ch = 0;
+						an = false;
+					}
+					if (count == 7) an = true;   // the binary bits string contains already 8 bits
+				}
+			}
+		}
+
+		out_file.seekp(0,ios::beg); //set pointer to the begining of the outputfile
+		if (count > 0) { //if there are remaining bainay bits, save the information in the first two position of the outputfile
+			out_file << (unsigned char)(count);  //The first positoin save how many remaining bits in the last
+			out_file << (char)(ch>>1);  //The seocnd position save the actual value the remaining bits indicate using a char
+			//cout << count << " r:" << (int)(char)(ch>>1) << endl;
+		}
+		else { //if there is no remaining bits, set 0 in botn position
+			out_file << '0';
+			out_file << '0';
+		}
+		for (int i = 0; i < MAX_SIZE; i++) { //save the code rule in the code file
+			if (node_array[i]->code != "")
+				code_file << (char)('a' + i) << node_array[i]->code.c_str() << endl;;
+		}
+		in_file.close(); // close files
+		out_file.close();
+		code_file.close();
+	}
+}
 
 void huffman::decoding_array() {
 	code_file.open(code_file_name, ios_base::in);
@@ -313,107 +321,104 @@ void huffman::rebuilt_huffmanTree() {
 }
 
 
-void huffman::huffman_decoding() {
-	decoding_array();
-	rebuilt_huffmanTree();
-	in_file.open(in_file_name);
-	out_file.open(out_file_name);
-	if (in_file.fail() || out_file.fail()) cout << "***Error:The file does not exist!" << endl; //if in_file or out_file does not exist, output the error message
-	else {
-		char temp;
-		node_ptr sub =  root;
-		while (!in_file.eof()) {
-			in_file >> temp; //get char from in_file
-			if (in_file.fail()) break;
-			
-			if (temp == '0') { //if temp is '0', go to left child node if any
-				if (sub->left != NULL) {
-					sub = sub->left;
-					
-				}		
-			} else { //if temp is '1', go to right child node if any
-				if (sub->right != NULL) {
-					sub = sub->right;			
-				}
-			}
-			if (sub->id != ' ') { //write the id into out_file
-				out_file << sub->id;
-				sub = root;
-			}
-		}
-	}
-	in_file.close();
-	out_file.close();
-}
-
 //void huffman::huffman_decoding() {
 //	decoding_array();
 //	rebuilt_huffmanTree();
-//	in_file.open(in_file_name, ios_base::binary);
-//	out_file.open(out_file_name, ios_base::binary);
-//	if (in_file.fail() || out_file.fail()) cout << "***Error:The file does not exist!" << endl;
+//	in_file.open(in_file_name);
+//	out_file.open(out_file_name);
+//	if (in_file.fail() || out_file.fail()) cout << "***Error:The file does not exist!" << endl; //if in_file or out_file does not exist, output the error message
 //	else {
-//		bool be = true;
-//		string beg = "";
-//		string line;
-//		unsigned char temp;
+//		char temp;
 //		node_ptr sub =  root;
 //		while (!in_file.eof()) {
-//			getline(in_file, line, '\n');
+//			in_file >> temp; //get char from in_file
+//			if (in_file.fail()) break;
 //			
-//			for (int i = 0; i < line.length(); i++) {
-//				temp = line[i];
-//				if (be) {
-//				   unsigned char r;
-//					r = line[++i];
-//					cout << (int)temp << " " << (int)(unsigned char)r << endl;
-//					if ((int)temp != 0) {
-//						beg = intToBin((int)(unsigned char)r, (int)temp);
-//					} else beg = "";
-//					be = false;
-//					cout << "bgg:" << beg << endl;
-//					continue;
+//			if (temp == '0') { //if temp is '0', go to left child node if any
+//				if (sub->left != NULL) {
+//					sub = sub->left;
+//					
+//				}		
+//			} else { //if temp is '1', go to right child node if any
+//				if (sub->right != NULL) {
+//					sub = sub->right;			
 //				}
-//				string ss = intToBin((int)temp, 8);
-//				cout << (int)temp << " " << ss << endl;
-//				for (int i = 0; i < ss.length(); i++) {
-//					if (ss[i] == '0') {
-//					if (sub->left != NULL) {
-//						sub = sub->left;
-//					}
-//					} else {
-//						if (sub->right != NULL) {
-//							sub = sub->right;
-//						}
-//					}
-//					if (sub->id != ' ') {
-//						out_file << sub->id;
-//						sub = root;
-//					}
-//				}
+//			}
+//			if (sub->id != ' ') { //write the id into out_file
+//				out_file << sub->id;
+//				sub = root;
 //			}
 //		}
-//		if (beg != "") {
-//				for (int i = 0; i < beg.length(); i++) {
-//					if (beg[i] == '0') {
-//					if (sub->left != NULL) {
-//						sub = sub->left;
-//					}
-//				
-//					} else {
-//						if (sub->right != NULL) {
-//							sub = sub->right;
-//						}
-//					}
-//					if (sub->id != ' ') {
-//						out_file << sub->id;
-//						sub = root;
-//					}
-//				}
-//			}
 //	}
 //	in_file.close();
 //	out_file.close();
 //}
+
+void huffman::huffman_decoding() {
+	decoding_array();       //fetch the coding rule form code file
+	rebuilt_huffmanTree();  //rebuild the huffman tree by using the coding rule
+	in_file.open(in_file_name, ios_base::binary);
+	out_file.open(out_file_name, ios_base::binary);
+	if (in_file.fail() || out_file.fail()) cout << "***Error:The file does not exist!" << endl;
+	else {
+		bool be = true; //if it is the begining of the decoding
+		string beg = "";//save the the codes of the last char if the file have
+		string line;  //read the file line by line
+		unsigned char temp;
+		node_ptr sub =  root;
+		while (!in_file.eof()) {
+			getline(in_file, line, '\n');//read
+			
+			for (int i = 0; i < line.length(); i++) {
+				temp = line[i];
+				if (be) {   //if it is in the beginning
+				   unsigned char r;
+					r = line[++i]; //read the second char
+					if ((int)temp != 0) {
+						beg = intToBin((int)(unsigned char)r, (int)temp); //if there is the remaining char, turn it to binary bits and assign to beg that can be decoded later
+					} else beg = "";
+					be = false;
+					continue;
+				}
+				string ss = intToBin((int)temp, 8); //turn the char to 8 binary bits
+				for (int i = 0; i < ss.length(); i++) { //read the codes and decode by traverse the huffman tree
+					if (ss[i] == '0') {     
+					if (sub->left != NULL) {// go to the left path
+						sub = sub->left;
+					}
+					} else {  
+						if (sub->right != NULL) { // go the right path
+							sub = sub->right;
+						}
+					}
+					if (sub->id != ' ') {
+						out_file << sub->id; // reach a leave and output it
+						sub = root;
+					}
+				}
+			}
+		}
+		if (beg != "") { // if there is remaining codes
+				for (int i = 0; i < beg.length(); i++) { //decode it the same as obove methods
+					if (beg[i] == '0') {
+					if (sub->left != NULL) {
+						sub = sub->left;
+					}
+				
+					} else {
+						if (sub->right != NULL) {
+							sub = sub->right;
+						}
+					}
+					if (sub->id != ' ') {
+						out_file << sub->id;
+						sub = root;
+					}
+				}
+			}
+	}
+	in_file.close();
+	out_file.close();
+}
 
 #endif HUFFMAN_H
