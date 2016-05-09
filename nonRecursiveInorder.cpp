@@ -35,6 +35,7 @@ void nonRecursiveInorder(BinaryNode* root) {
 			p = p->left;
 		} else {
 			p = s.top();
+			s.pop(); 
 			cout << p->elements;
 			p = p->right;
 		}
