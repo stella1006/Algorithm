@@ -6,7 +6,6 @@
 #include <stack>
 using namespace std;
 
-
 template <typename T>
 struct treeNode {
 	T data;
@@ -24,94 +23,20 @@ public:
 	~BinTree();   //destructor
 	bool insert(const T d) ;       //insert data d, if succeed, return true and return false otherwise
 	bool search(const T d) const;       //find d. Return true if succeed
-	void print() ;        //level traverse
+	void print() const;        //level traverse
 	void traversal(void (*visit)(T d)) const;   //traverse inorder
 
 private:
 	treeNode<T>* root;
 	int count;    //number of nodes
 	bool insertR(treeNode<T>* & t, const T d); //insert recursivly
-	void printR(treeNode<T>* & t) ;
-	void levelTraR(treeNode<T>* & t, int level, vector<vector<T>> &res);
+	void printR(const treeNode<T>* t, queue<treeNode<T>*> q) const; //recursively print the tree from the node t with the help of the queue q
 	void release(treeNode<T> *t);
 	void traversalR(const treeNode<T>*t, void (*visit)(T d)) const;
 };
 
-
 template <typename T> 
-bool BinTree<T>::insertR(treeNode<T>* & t, const T d) {
-	if (t == NULL) {
-		treeNode<T>* temp = new treeNode<T>(d);
-		t = temp;
-		count++;
-		return true;
-	}
-
-	if (d < t->data) {
-			return insertR(t->left, d);
-	} else if (d > t->data) {
-		return insertR(t->right, d);
-	} else {}
-	return false;
-}
-
-template <typename T> 
-void BinTree<T>::levelTraR(treeNode<T>* & t, int level, vector<vector<T>> &res) {
-	if (!t) return;
-	if (level > res.size()) {
-		res.push_back(vector<int>());
-	}
-	res[level-1].push_back(t->data);
-	levelTraR(t->left, level+1, res);
-	levelTraR(t->right, level+1, res);
-
-}
-
-template <typename T> 
-void BinTree<T>::printR(treeNode<T>* & t)  {
-	vector<vector<T>> res;
-	levelTraR(t, 1, res);
-	for (int i = 0; i < res.size(); i++) {
-		for (int j = 0; j < res[i].size(); j++) {
-			cout << res[i][j] << " ";
-		}
-		cout << endl;
-	}
-
-	/*queue<treeNode<T>*> q;
-	if (t) q.push(t);
-	else {
-		cout << "empty" << endl;
-		return;
-	}
-	while (!q.empty()) {
-		treeNode<T> * temp = q.front();
-		q.pop();
-		cout << temp->data << " ";
-		if (temp->left)
-			q.push(temp->left);
-		if (temp->right) 
-			q.push(temp->right);
-	}*/
-	cout << endl;
-}
-
-template <typename T> 
-void BinTree<T>::release(treeNode<T> *t) {
-	delete t;
-}
-
-template <typename T> 
-void BinTree<T>::traversalR(const treeNode<T>*t, void (*visit)(T d)) const {
-	if (t != NULL) {
-		traversalR(t->left, visit);
-		visit(t->data);
-		traversalR(t->right, visit);
-	}
-}
-
-template <typename T> 
-BinTree<T>::BinTree(const BinTree& original) {
+BinTree<T>::BinTree(const BinTree& original) {//copy constructor
 	this->root = original.root;
 	this->count = original.count;
 }
@@ -123,8 +48,6 @@ BinTree<T> & BinTree<T>::operator = (const BinTree<T> &original) {
 		root->left = original->root->left;
 		root->right = original->root->right;
 	}
-	
-
 	return *this;
 }
 
@@ -132,6 +55,55 @@ template <typename T>
 BinTree<T>::~BinTree() {
 	release(root);
 }
+
+template <typename T> 
+bool BinTree<T>::insertR(treeNode<T>* & t, const T d) {//recursively insert data d into the tree from the node t
+	if (t == NULL) {//if the tree is empty
+		treeNode<T>* temp = new treeNode<T>(d);
+		t = temp;
+		count++;
+		return true;
+	}
+
+	if (d < t->data) {
+			return insertR(t->left, d);  //go to left child if any
+	} else if (d > t->data) {
+		return insertR(t->right, d);  //go to right child if any
+	} else {}
+	return false;
+}
+
+template <typename T> 
+void BinTree<T>::printR(const treeNode<T>* t, queue<treeNode<T>*> q) const { //recursively print the tree from the node t with the help of the queue q
+		cout << t->data << " ";
+		if (t->left != NULL) //push the left child node into the queue if any
+			q.push(t->left);
+		if (t->right != NULL) //push the right child node into the queue if any
+			q.push(t->right);
+		if (q.empty())
+			return;
+		else { //the queue is not empty
+			t = q.front();
+			q.pop();
+			printR(t, q);
+		}
+	}
+
+template <typename T> 
+void BinTree<T>::release(treeNode<T> *t) {   ///release the memory
+	delete t;
+}
+
+template <typename T> 
+void BinTree<T>::traversalR(const treeNode<T>*t, void (*visit)(T d)) const { //recursively traverse the tree from the node t
+	if (t != NULL) {
+		traversalR(t->left, visit);   //traverse left child node if any
+		visit(t->data);
+		traversalR(t->right, visit);   //traverse right child node if any
+	}
+}
+
+
 
 template <typename T>
 bool BinTree<T>::insert(const T d) {
@@ -141,13 +113,13 @@ bool BinTree<T>::insert(const T d) {
 }
 
 template <typename T>
-bool BinTree<T>::search(const T d) const{
+bool BinTree<T>::search(const T d) const{    //search for data d in the tree
 	treeNode<T>* p = root;
-	while (p != NULL) {
+	while (p != NULL) { 
 		if (d < p->data) {
-			p = p->left;
-		} else if (d > p->data) {
-			p = p->right;
+			p = p->left;   //go to left child node if not any
+		} else if (d > p->data) {  
+			p = p->right;   //go to right child node if not any
 		} else {
 			return true;
 		}
@@ -156,8 +128,12 @@ bool BinTree<T>::search(const T d) const{
 }
 
 template <typename T>
-void BinTree<T>::print() {
-	printR(root);
+void BinTree<T>::print() const { //print the tree by hierarchy traversal
+	if (root != NULL) {
+		queue<treeNode<T>*> q; //to store the nodes to visit
+		printR(root, q); //recursively print the tree from the root with the help of the queue
+	}
+	cout << endl;
 }
 
 template <typename T>
